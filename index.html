@@ -25,12 +25,14 @@
     h1{ font-size:36px; margin-bottom:10px; }
     p{ font-size:16px; margin-bottom:18px; }
 
+    /* Bigger play area so NO has space */
     .buttons{
-  position:relative;
-  width:100%;
-  height:140px; /* gives NO room to run */
-  margin-top:20px;
+      position:relative;
+      width:100%;
+      height:150px;
+      margin-top:18px;
     }
+
     button{
       padding:14px 22px;
       border:none;
@@ -39,16 +41,30 @@
       font-weight:700;
       cursor:pointer;
       box-shadow:0 12px 24px rgba(0,0,0,.12);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
-    #yesBtn{ background:#22c55e; color:white; }
+
+    #yesBtn{
+      background:#22c55e;
+      color:white;
+      position:absolute;
+      left:50%;
+      top:20px;
+      transform:translateX(-50%);
+      z-index:1;
+    }
+
     #noBtn{
-  background:#ef4444;
-  color:white;
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%, -50%);
-}
+      background:#ef4444;
+      color:white;
+      position:absolute;
+      left:50%;
+      top:95px;
+      transform:translateX(-50%);
+      z-index:2;
+    }
+
     .result{
       display:none;
       margin-top:18px;
@@ -56,18 +72,19 @@
       padding:16px;
       border-radius:18px;
     }
+
     iframe{
-      margin-top:16px;
+      margin-top:14px;
       border-radius:12px;
     }
   </style>
 </head>
 
 <body>
-  <main class="card" id="page">
+  <main class="card">
     <h1>Bebiii 💖</h1>
     <p>
-      Will you be my Valentine? 🥺  
+      Will you be my Valentine? 🥺
       <br><strong>— Bubba</strong>
     </p>
 
@@ -80,12 +97,12 @@
       <h2>YAY!! 🥰</h2>
       <p>You are my universe. 🌍💖</p>
 
-      <!-- 🎵 Spotify: Your Universe – Rico Blanco -->
-      <iframe 
+      <!-- Spotify embed (tap play) -->
+      <iframe
         src="https://open.spotify.com/embed/track/4q1tXx4t4s1kYkZ6s7Yx8E"
-        width="100%" 
-        height="80" 
-        frameborder="0" 
+        width="100%"
+        height="80"
+        frameborder="0"
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
       </iframe>
     </div>
@@ -93,46 +110,56 @@
 
   <script>
     const yesBtn = document.getElementById('yesBtn');
-    const noBtn = document.getElementById('noBtn');
+    const noBtn  = document.getElementById('noBtn');
     const btnArea = document.getElementById('btnArea');
-    const result = document.getElementById('result');
+    const result  = document.getElementById('result');
 
-    function runAway(){
+    function moveNo(){
       const area = btnArea.getBoundingClientRect();
-      const btn = noBtn.getBoundingClientRect();
-      const x = Math.random() * (area.width - btn.width);
-      const y = Math.random() * (area.height - btn.height);
+
+      // Use offsets (works reliably for absolute positioned buttons)
+      const btnW = noBtn.offsetWidth;
+      const btnH = noBtn.offsetHeight;
+
+      const padding = 8;
+      const maxX = Math.max(padding, area.width - btnW - padding);
+      const maxY = Math.max(padding, area.height - btnH - padding);
+
+      const x = Math.random() * (maxX - padding) + padding;
+      const y = Math.random() * (maxY - padding) + padding;
+
       noBtn.style.left = x + "px";
-      noBtn.style.top = y + "px";
+      noBtn.style.top  = y + "px";
+      noBtn.style.transform = "none";
     }
 
-    yesBtn.onclick = () => {
-      if ("vibrate" in navigator) {
-        navigator.vibrate([100, 60, 120, 60, 200]);
-      }
+    // iPhone-friendly: move on touch + pointer + mouse
+    ["touchstart","pointerdown","mousedown","click"].forEach(evt => {
+      noBtn.addEventListener(evt, moveNo, {passive:true});
+    });
+
+    // Also move if her finger gets near it (optional fun)
+    btnArea.addEventListener("touchmove", (e) => {
+      const t = e.touches[0];
+      if(!t) return;
+
+      const b = noBtn.getBoundingClientRect();
+      const dx = Math.abs(t.clientX - (b.left + b.width/2));
+      const dy = Math.abs(t.clientY - (b.top + b.height/2));
+      if(dx < 80 && dy < 60) moveNo();
+    }, {passive:true});
+
+    yesBtn.addEventListener('click', () => {
+      if ("vibrate" in navigator) navigator.vibrate([100, 60, 120, 60, 200]);
       result.style.display = "block";
       noBtn.style.display = "none";
       yesBtn.textContent = "YES FOREVER 💍💖";
-    };
+    });
 
-    noBtn.addEventListener("touchstart", (e) => {
-  e.preventDefault();
-  function runAway(){
-  const area = btnArea.getBoundingClientRect();
-  const btn = noBtn.getBoundingClientRect();
-
-  const maxX = area.width - btn.width;
-  const maxY = area.height - btn.height;
-
-  const x = Math.random() * maxX;
-  const y = Math.random() * maxY;
-
-  noBtn.style.left = x + "px";
-  noBtn.style.top = y + "px";
-};
-});
-
-noBtn.addEventListener("click", runAway);
+    // Put NO somewhere fun on load (so it’s not stacked)
+    window.addEventListener("load", () => {
+      setTimeout(moveNo, 200);
+    });
   </script>
 </body>
 </html>
