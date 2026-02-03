@@ -26,11 +26,10 @@
     p{ font-size:16px; margin-bottom:18px; }
 
     .buttons{
-      display:flex;
-      justify-content:center;
-      gap:12px;
-      position:relative;
-      min-height:56px;
+  position:relative;
+  width:100%;
+  height:140px; /* gives NO room to run */
+  margin-top:20px;
     }
     button{
       padding:14px 22px;
@@ -43,10 +42,13 @@
     }
     #yesBtn{ background:#22c55e; color:white; }
     #noBtn{
-      background:#ef4444;
-      color:white;
-      position:absolute;
-    }
+  background:#ef4444;
+  color:white;
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -50%);
+}
     .result{
       display:none;
       margin-top:18px;
@@ -113,8 +115,24 @@
       yesBtn.textContent = "YES FOREVER 💍💖";
     };
 
-    noBtn.onmouseenter = runAway;
-    noBtn.ontouchstart = runAway;
+    noBtn.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  function runAway(){
+  const area = btnArea.getBoundingClientRect();
+  const btn = noBtn.getBoundingClientRect();
+
+  const maxX = area.width - btn.width;
+  const maxY = area.height - btn.height;
+
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+
+  noBtn.style.left = x + "px";
+  noBtn.style.top = y + "px";
+};
+});
+
+noBtn.addEventListener("click", runAway);
   </script>
 </body>
 </html>
